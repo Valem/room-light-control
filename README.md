@@ -114,3 +114,7 @@ d) Using a human presence sensor like the Aqara FP1. The lights will turn on whe
 ## License
 
 Room Light Control is licensed under the [GNU GENERAL PUBLIC LICENSE](LICENSE).
+
+## Credits
+
+Special credits goes to Daniel Mason, the creator of [entity-controller](https://github.com/danobot/entity-controller) from which I got inspired and used his code base as starting point for this integration.
