@@ -1,6 +1,6 @@
 # Room Light Control
 
-Room Light Control is a smart home integration designed to automatically control the lights in a specific room of your house. 
+Room Light Control is a home-assistant integration designed to automatically control the lights in a specific room of your house. 
 Using a combination of sensors and logic, the automation creates a natural and convenient experience when you enter and exit the room.
 
 ## Features
