@@ -207,7 +207,7 @@ def setup_state_machine():
         trigger="timer_expires",
         source="active_control",
         dest="idle",
-        conditions=["is_motion_sensor_off"],
+        conditions=["is_motion_sensor_off", "is_turn_off_sensor_off"],
         unless=["is_turn_off_blocked"]
     )
 
@@ -441,7 +441,7 @@ class Model:
                 self.log.debug("motion_sensor_state_change :: CONF_MOTION_SENSOR_RESETS_TIMER")
                 self.update(notes="The sensor turned off and reset the timeout. Timer started.")
                 self._reset_timer()
-            elif not self.is_turn_off_sensor_available():
+            else: 
                 self.motion_sensor_off()
 
     @callback
@@ -545,9 +545,6 @@ class Model:
             self.timer_handle.cancel()
 
     def _reset_timer(self):
-        if self.is_turn_off_sensor_available():
-            return
-
         self.log.debug("_reset_timer :: Resetting timer")
         self._cancel_timer()
         self.update(reset_at=datetime.now())
@@ -562,6 +559,10 @@ class Model:
             self.update(expires_at="waiting for motion sensor off event")
         else:
             self.log.debug("timer_expire :: Trigger timer_expires event")
+            
+            if self.is_turn_off_sensor_off():
+                self.log.debug("Turn_off_sensor timeout reached")
+
             self.timer_expires()            
 
     # =====================================================
@@ -589,12 +590,37 @@ class Model:
                 return e
         self.log.debug("Sensor entities are OFF.")
         return None
+    
+    def _turn_off_sensor_entity_state(self):
+        for e in self.turnOffSensorEntities:
+            s = self.hass.states.get(e)
+            try:
+                state = s.state
+            except AttributeError as ex:
+                self.log.error(
+                    "Potential configuration error: Turn Off Sensor Entity ({}) does not exist (yet). Please check for spelling and typos. {}".format(
+                        e, ex
+                    )
+                )
+                return None
+
+            if self.matches(state, self.SENSOR_ON_STATE):
+                self.log.debug("Turn Off Sensor entities are ON. [%s]", e)
+                return e
+        self.log.debug("Turn Off Sensor entities are OFF.")
+        return None    
 
     def is_motion_sensor_off(self):
         return self._motion_sensor_entity_state() is None
 
     def is_motion_sensor_on(self):
         return self._motion_sensor_entity_state() is not None
+    
+    def is_turn_off_sensor_off(self):
+        if not self.is_turn_off_sensor_available():
+            return True
+        
+        return self._turn_off_sensor_entity_state() is None
 
     def _state_entity_state(self):
         for e in self.roomLightEntities:
@@ -714,8 +740,8 @@ class Model:
         self.update(last_triggered_at=str(datetime.now()))
         self.prepare_service_data()
 
-        if not self.is_turn_off_sensor_available():
-            self._start_timer()
+        # we start the timer in any case, also if a turn off sensor is configured. In later case it acts as timeout timer.
+        self._start_timer()
 
         self.log.debug("Turning on Light Entities")
         self.turnOnLightEntities()
@@ -726,8 +752,7 @@ class Model:
         self.log.debug("Exiting active")
         self.log.debug("on_exit_active :: cancelling timer")
 
-        if not self.is_turn_off_sensor_available():
-            self._cancel_timer()  # cancel previous timer
+        self._cancel_timer()  # cancel previous timer
 
     def on_enter_blocked(self):
         self.log.debug("Entering blocked")

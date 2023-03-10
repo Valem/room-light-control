@@ -1,18 +1,18 @@
 {
-    "domain": "room_light_control",
-    "name": "Room presence based light controller",
-    "documentation": "coming soon",
-    "requirements": [
-        "transitions==0.8.8",
-        "colormath==3.0.0"
-      ],
-    "iot_class": "calculated",
-    "after_dependencies": [
-    "light",
-    "script",
-    "scene",
-    "binary_sensor"
-    ],      
-    "version": "1.0.0",
-    "codeowners": ["@valem"]
+  "domain": "room_light_control",
+  "name": "Room presence based light controller",
+  "documentation": "coming soon",
+  "requirements": [
+      "transitions==0.8.8",
+      "colormath==3.0.0"
+    ],
+  "iot_class": "calculated",
+  "after_dependencies": [
+  "light",
+  "script",
+  "scene",
+  "binary_sensor"
+  ],      
+  "version": "1.0.1",
+  "codeowners": ["@valem"]
 }
