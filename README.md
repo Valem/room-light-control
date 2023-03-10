@@ -1,6 +1,6 @@
 # Room Light Control
 
-Room Light Control is a smart home integration designed to automatically control the lights in a specific room of your house. 
+Room Light Control is a home-assistant integration designed to automatically control the lights in a specific room of your house. 
 Using a combination of sensors and logic, the automation creates a natural and convenient experience when you enter and exit the room.
 
 ## Features
@@ -44,13 +44,13 @@ This integration is build all around rooms, so first you need to configure an ar
 | Property name | Description | Default value |
 | --- | --- | --- |
 | `room` | The name of the room, corresponding to the area name. |  |
-| `motion_sensor` | A list of motion sensors used to trigger the lights. |  |
+| `motion_sensor` | A list of motion sensors used to trigger the lights. On/Off Sensor, when state changes from off to on scene/script configured in 'turn_on_light' is triggered |  |
 | `illuminance_sensor` | A sensor used to measure the illuminance in the room. (Optional) |  |
 | `illuminance_sensor_threshold` | The threshold illuminance value for the lights to turn on. (Optional) | `5.0` |
 | `turn_on_light` | The script or scene used to turn on the lights. |  |
 | `turn_off_light` | Turn off the lights by script instead of default method which turns off every single light automatically (Optional) |  |
 | `turn_off_delay` | The time delay (in seconds) before turning off the lights after no motion is detected. (Optional) | `180` |
-| `turn_off_sensor` | A sensor used to detect when a person has left the room. (Optional) |  |
+| `turn_off_sensor` | A sensor used to detect when a person has left the room. On/Off Sensor, when state changes from on to off lights will be turned off. (Optional) |  |
 | `turn_off_blocking_entity` | An entity that, when active, prevents the lights from turning off. (Optional) |  |
 
 
@@ -114,3 +114,7 @@ d) Using a human presence sensor like the Aqara FP1. The lights will turn on whe
 ## License
 
 Room Light Control is licensed under the [GNU GENERAL PUBLIC LICENSE](LICENSE).
+
+## Credits
+
+Special credits goes to Daniel Mason, the creator of [entity-controller](https://github.com/danobot/entity-controller) from which I got inspired and used his code base as starting point for this integration.
