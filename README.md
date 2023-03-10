@@ -49,7 +49,7 @@ This integration is build all around rooms, so first you need to configure an ar
 | `illuminance_sensor_threshold` | The threshold illuminance value for the lights to turn on. (Optional) | `5.0` |
 | `turn_on_light` | The script or scene used to turn on the lights. |  |
 | `turn_off_light` | Turn off the lights by script instead of default method which turns off every single light automatically (Optional) |  |
-| `turn_off_delay` | The time delay (in seconds) before turning off the lights after no motion is detected. (Optional) | `180` |
+| `turn_off_delay` | The time delay (in seconds) before turning off the lights after no motion is detected. Acts also as a timeout for the turn_off_sensor, if it is configured. (Optional) | `180` |
 | `turn_off_sensor` | A sensor used to detect when a person has left the room. On/Off Sensor, when state changes from on to off lights will be turned off. (Optional) |  |
 | `turn_off_blocking_entity` | An entity that, when active, prevents the lights from turning off. (Optional) |  |
 
