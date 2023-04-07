@@ -25,7 +25,7 @@ Please don't make any pull requests yet, because it's my first open source proje
 ## Vision, Goals and Ideas/Improvements
 
 ### Vision
-Room Light Control aims to simplify the management of lighting in rooms by providing an automated and customizable solution that integrates with Home Assistant. The idea is to create a natural experience when you enter or exit a room, which requires a minimum set of sensors to be able to detect presence and light condition in a room.
+Room Light Control aims to simplify the management of lighting in rooms by providing an automated and customizable solution that integrates with Home Assistant. The idea is to create a natural experience when you enter or exit a room, which requires the most available sensors possible to be able to detect presence and light condition in a room.
 
 ### Goals
 - Provide automated control of lights in a specific room of the house using motion and occupancy sensors.
