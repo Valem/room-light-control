@@ -15,7 +15,7 @@ Using a combination of sensors and logic, the automation creates a natural and c
   - ... lights are already on
   - ... a scene is activated while auto-control is running (e.g. Philips Hue Scene turned on with your Smartphone)
 - Lights can be blocked from turning off by a configurable entity
-- Easy Configuration with auto-discovery based on a room or area
+- Easy Configuration with auto-discovery based on a room akka area
 
 ## Installation
 
@@ -107,9 +107,9 @@ d) Using a human presence sensor like the Aqara FP1. The lights will turn on whe
 ```
 
 
-## Support
+## Contributing
 
-[tbd]
+Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) and the process for submitting issues.
 
 ## License
 
