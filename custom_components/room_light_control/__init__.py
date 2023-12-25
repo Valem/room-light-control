@@ -772,10 +772,12 @@ class Model:
     # =====================================================
     #    C O N F I G U R A T I O N  &  V A L I D A T I O N
     # =====================================================
-
+        
     def setup_area_entities(self, config):
         self.add(self.room, config, CONF_ROOM)
         self.add(self.room, config, CONF_ROOMS)
+
+        self.log.debug("Setting up room: %s", self.room)
 
         if len(self.room) == 0:
             self.log.error(
@@ -790,7 +792,8 @@ class Model:
             self.log.debug("area_id: %s", area_id)
         
             room_lights = self.get_entities_for_area(area_id, 'light')
-            self.add(self.roomLightEntities, room_lights)
+            self.log.debug("room_lights: %s", room_lights)
+            self.roomLightEntities.extend(room_lights)
 
         self.update(room_lights=self.roomLightEntities)
 
@@ -806,6 +809,7 @@ class Model:
     def get_area_id(self, area_name):
         area_reg = area_registry.async_get(self.hass)
         area = area_reg.async_get_area_by_name(area_name.lower())
+
         if area is not None:
             return area.id        
 
@@ -821,7 +825,7 @@ class Model:
         
         entities.extend(device_entities_by_device)
 
-        # self.log.info("room entities: %s", entities)   
+        #self.log.info("room entities: %s", entities)   
         
         if domain is not None:
             entities=[e for e in entities if e.entity_id.startswith(domain)]
@@ -830,7 +834,7 @@ class Model:
         if entities==[]:
             return []
         else:
-            return [e.entity_id for e in (entities or [])]                              
+            return [e.entity_id for e in (entities or [])]                                
 
     def config_turn_off_script(self, config):
 
@@ -1005,22 +1009,11 @@ class Model:
             return False
 
     def add(self, list, config, key=None):
-        if config is not None:
-            v = []
-            if key is not None:
-                if key in config:  # must be in separate if statement
-                    v = config[key]
-            else:
-                v = config
-            if type(v) == str:
-
-                list.append(v)
-            else:
-                list.extend(v)
-        else:
-            self.log.debug("Tried to configure %s but supplied config was None" % (key))
-        return len(v) > 0
-
+        if key in config:
+            value = config[key]
+            if isinstance(value, str):
+                value = [value]  # Wrap the single string in a list
+            list.extend(value)
 
     def log_config(self):
         self.log.debug("--------------------------------------------------")
