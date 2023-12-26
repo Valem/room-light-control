@@ -106,6 +106,27 @@ d) Using a human presence sensor like the Aqara FP1. The lights will turn on whe
     turn_on_light: script.bath_activate_light 
 ```
 
+## Debugging
+
+If you encounter issues with Room Light Control, here are some steps and tools to help you troubleshoot and resolve them:
+
+### Current state
+
+You find all relevant attributes under Developer Tools->States. Here you can also see which light's have been dynamically scanned.
+![Room Light Control States](states.png)
+
+The state of RLC transistions as following:
+![State transitions](room_light_control_state_diagram.drawio.png)
+
+### Enable Detailed Logging
+To get detailed logs from your Room Light Control integration, you can increase the logging level in Home Assistant. Add the following to your `configuration.yaml` file under the `logger` component:
+
+```yaml
+logger:
+  default: warning
+  logs:
+    custom_components.room_light_control: debug
+```
 
 ## Contributing
 
