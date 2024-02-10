@@ -6,7 +6,7 @@ Using a combination of sensors and logic, the automation creates a natural and c
 
 ------------
 
-Version: 1.0.2
+Version: 1.0.3
 
 """
 
