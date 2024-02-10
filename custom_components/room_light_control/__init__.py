@@ -470,6 +470,47 @@ class Model:
         self.log.debug("illuminance_sensor_state_change :: %10s Sensor state change to: %s" % ( pprint.pformat(entity), new.state))
         self.log.debug("illuminance_sensor_state_change :: state: " +  pprint.pformat(self.state))           
 
+    def has_significant_color_change(self, old_state, new_state, rel_tol):
+        color_mode = new_state.attributes.get('color_mode', None)
+
+        # Check for significant xy_color change if the light is in xy color mode
+        if color_mode == 'xy':
+            old_xy = old_state.attributes.get('xy_color')
+            new_xy = new_state.attributes.get('xy_color')
+            if old_xy and new_xy:
+                # Calculate the Euclidean distance for xy_color
+                xy_distance = math.sqrt((old_xy[0] - new_xy[0]) ** 2 + (old_xy[1] - new_xy[1]) ** 2)
+                max_distance = max(math.sqrt(old_xy[0] ** 2 + old_xy[1] ** 2), math.sqrt(new_xy[0] ** 2 + new_xy[1] ** 2))
+                significant_change = xy_distance / max_distance > rel_tol
+                if significant_change:
+                    return True
+
+        # Check for significant color_temp change if the light is in color_temp mode
+        elif color_mode == 'color_temp':
+            old_ct = old_state.attributes.get('color_temp')
+            new_ct = new_state.attributes.get('color_temp')
+            if old_ct is not None and new_ct is not None:
+                # Use math.isclose for color_temp with a relative tolerance
+                if not math.isclose(old_ct, new_ct, rel_tol=rel_tol):
+                    return True
+                
+        # check rgb color attribute if available
+        if "rgb_color" in old_state.attributes and "rgb_color" in new_state.attributes:
+            old_rgb_r, old_rgb_g, old_rgb_b = old_state.attributes["rgb_color"]
+            new_rgb_r, new_rgb_g, new_rgb_b = new_state.attributes["rgb_color"]
+
+            # We need to apply some tolerance to ignore oscillating values reported by the device
+            delta_e = self.calc_delta_e(old_rgb_r, old_rgb_g, old_rgb_b, new_rgb_r, new_rgb_g, new_rgb_b)
+            self.log.debug("%s: Delta-E Color difference = %s", str(entity), str(delta_e))
+
+            if delta_e > 1.0:
+                self.log.info("state_entity_state_change :: Significant rgb color change old = %s, new = %s", old_state.attributes["rgb_color"], new_state.attributes["rgb_color"])
+                return True              
+
+        # No significant change detected
+        return False
+
+
     @callback
     def state_entity_state_change(self, entity, old, new):
         """ State change callback for state entities. This can be called with either a state change or an attribute change. """
@@ -500,26 +541,9 @@ class Model:
                     self.log.info("state_entity_state_change :: Significant brightness change old = %s, new = %s", old_b, new_b)
                     changed_attributes.append("brightness")
 
-            # check color_temp attribute if available
-            if "color_temp" in old.attributes and "color_temp" in new.attributes:
-                old_ct = old.attributes["color_temp"]
-                new_ct = new.attributes["color_temp"]
-                if not math.isclose(old_ct, new_ct, rel_tol=0.02): # We need to apply some tolerance to ignore oscillating values reported by the device
-                    self.log.info("state_entity_state_change :: Significant color_temp change old = %s, new = %s", old_ct, new_ct)
-                    changed_attributes.append("color_temp")          
-
-            # check rgb color attribute if available
-            if "rgb_color" in old.attributes and "rgb_color" in new.attributes:
-                old_rgb_r, old_rgb_g, old_rgb_b = old.attributes["rgb_color"]
-                new_rgb_r, new_rgb_g, new_rgb_b = new.attributes["rgb_color"]
-
-                # We need to apply some tolerance to ignore oscillating values reported by the device
-                delta_e = self.calc_delta_e(old_rgb_r, old_rgb_g, old_rgb_b, new_rgb_r, new_rgb_g, new_rgb_b)
-                self.log.debug("%s: Delta-E Color difference = %s", str(entity), str(delta_e))
-
-                if delta_e > 1.0:
-                    self.log.info("state_entity_state_change :: Significant rgb color change old = %s, new = %s", old.attributes["rgb_color"], new.attributes["rgb_color"])
-                    changed_attributes.append("rgb_color")  
+            if self.has_significant_color_change(old, new, 0.02):
+                self.log.info("state_entity_state_change :: Significant color change detected for %s.", entity)      
+                changed_attributes.append("color")      
 
             if len(changed_attributes) > 0:
                 self.log.info("state_entity_state_change :: We have significant attribute change and will handle it: %s", changed_attributes)
