@@ -6,7 +6,7 @@ Using a combination of sensors and logic, the automation creates a natural and c
 
 ------------
 
-Version: 1.0.3
+Version: 1.0.4
 
 """
 
@@ -331,7 +331,7 @@ class RoomLightController(entity.Entity):
     def do_update(self, wait=False, **kwargs):
         """ Schedules an entity state update with HASS """
         if self.may_update:
-            self.async_schedule_update_ha_state(True)
+            self.schedule_update_ha_state(True)
 
     def set_attr(self, k, v):
         if k == CONF_TURN_OFF_DELAY:
@@ -994,7 +994,7 @@ class Model:
             params = service_data
 
         params["entity_id"] = entity        
-        self.hass.async_create_task(
+        self.hass.add_job(
             self.hass.services.async_call(domain, service, service_data, context=self.context)
         )
 
