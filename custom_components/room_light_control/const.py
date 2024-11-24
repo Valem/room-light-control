@@ -19,8 +19,8 @@ DEFAULT_ILLUMINANCE_THRESHOLD = 5.0
 
 DEFAULT_DELAY = 180
 
-# turn_on_light (either script or scene)
-CONF_TURN_ON_LIGHT = "turn_on_light"
+# activate_light_script_or_scene (either script or scene)
+ACTIVATE_LIGHT_SCRIPT_OR_SCENE = "activate_light_script_or_scene"
 # turn_off_light (script)
 CONF_TURN_OFF_LIGHT = "turn_off_light"
 # timeout

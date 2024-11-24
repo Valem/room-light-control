@@ -6,7 +6,7 @@ Using a combination of sensors and logic, the automation creates a natural and c
 
 ------------
 
-Version: 1.0.4
+Version: 1.0.5
 
 """
 
@@ -57,7 +57,7 @@ from .const import (
 
     DEFAULT_DELAY,
     DEFAULT_ILLUMINANCE_THRESHOLD,
-    CONF_TURN_ON_LIGHT,
+    ACTIVATE_LIGHT_SCRIPT_OR_SCENE,
     CONF_TURN_OFF_LIGHT,
     CONF_ROOM,
     CONF_ROOMS,
@@ -85,7 +85,7 @@ MODE_SCHEMA = vol.Schema(
 
 ENTITY_SCHEMA = vol.Schema(
     cv.has_at_least_one_key(
-        CONF_TURN_ON_LIGHT
+        CONF_ROOM
     ),
     {
         vol.Required(CONF_ROOM, default=[]): cv.entity_ids,
@@ -99,7 +99,7 @@ ENTITY_SCHEMA = vol.Schema(
         vol.Optional(CONF_TURN_OFF_BLOCKING_ENTITIES, default=[]): cv.entity_ids,
         vol.Optional(CONF_ILLUMINANCE_SENSOR, default=None): cv.entity_id,
         vol.Optional(CONF_ILLUMINANCE_SENSOR_THRESHOLD, default=DEFAULT_ILLUMINANCE_THRESHOLD): cv.small_float,
-        vol.Required(CONF_TURN_ON_LIGHT, default=None): cv.entity_ids,
+        vol.Optional(ACTIVATE_LIGHT_SCRIPT_OR_SCENE, default=None): vol.All(cv.entity_ids, [vol.Match(r'^(scene|script)\..*')]),  # Restrict to scenes or scripts
         vol.Optional(CONF_TURN_OFF_LIGHT, default=None): cv.entity_ids,
     },
 )
@@ -368,7 +368,7 @@ class Model:
         self.illuminanceSensorThreshold = None
         self.turnOffDelay = None
         self.turnOffScript = []
-        self.turnOnScene = []
+        self.activateLightSceneOrScript = []
         self.timer_handle = None
         self.name = None
         self.log = logging.getLogger(__name__ + "." + config.get(CONF_NAME))
@@ -446,7 +446,7 @@ class Model:
                 self.update(notes="The sensor turned off and reset the timeout. Timer started.")
                 self._reset_timer()
             else: 
-                self.motion_sensor_off()
+                self.motion_sensor_off()              
 
     @callback
     def turn_off_sensor_state_change(self, entity, old, new):
@@ -522,6 +522,22 @@ class Model:
             str(new)
         )
 
+        self.log.debug("handle_state_change :: Self-Context: %s.", str(self.context))
+        self.log.debug("handle_state_change :: Self-Context-Id: %s.", self.context.id)
+        self.log.debug("handle_state_change :: Self-Context-User-Id: %s.", self.context.user_id)
+        self.log.debug("handle_state_change :: Self-Context-Parent-Id: %s.", self.context.parent_id)
+
+        self.log.debug("handle_state_change :: New-Context: %s.", str(new.context))
+        self.log.debug("handle_state_change :: New-Context-Id: %s.", new.context.id)
+        self.log.debug("handle_state_change :: New-Context-User-Id: %s.", new.context.user_id)
+        self.log.debug("handle_state_change :: New-Context-Parent-Id: %s.", new.context.parent_id)
+
+        if self.context.parent_id is None:
+            self.log.info("handle_state_change :: Light status change triggered by manual interference.")
+        else:
+            self.log.info("handle_state_change :: Light status change triggered by RLC integration.")            
+
+
         if self.is_ignored_context(new.context) or self.is_within_grace_period() or old is None:
             self.log.debug("state_entity_state_change :: Ignoring this state change.")
             return
@@ -550,7 +566,7 @@ class Model:
                 self.handle_state_change(new)
 
     def handle_state_change(self, new):
-        self.set_context(new.context)
+        self.set_context(new.context)    
 
         if self.is_active_control():
             self.log.info("handle_state_change :: We are in active control and the state of observed state entities changed.")
@@ -868,10 +884,10 @@ class Model:
             self.log.info("Turn Off Scripts: " +  pprint.pformat(self.turnOffScript))
 
     def config_turn_on_scene(self, config):
-        self.turnOnScene = []
-        self.add(self.turnOnScene, config, CONF_TURN_ON_LIGHT)
-        if len(self.turnOnScene) > 0:
-            self.log.info("Turn On Scenes: " +  pprint.pformat(self.turnOnScene))
+        self.activateLightSceneOrScript = []
+        self.add(self.activateLightSceneOrScript, config, ACTIVATE_LIGHT_SCRIPT_OR_SCENE)
+        if len(self.activateLightSceneOrScript) > 0:
+            self.log.info("Turn On Scripts or Scenes: " +  pprint.pformat(self.activateLightSceneOrScript))
 
     def config_sensor_entities(self, config):
         self.motionSensorEntities = []
@@ -948,20 +964,24 @@ class Model:
 
     # turnOffScript (either a script or directly light entities)
     def turnOffLightEntities(self):
-        if len(self.turnOffScript) > 0:
-            self.log.info("turnOffLightEntities :: Turning Off the Lights! (%s)", self.turnOffScript)
+        if self.turnOffScript:
+            self.log.info("turnOffLightEntities ::  Executing Turn Off Scripts: (%s)", self.turnOffScript)
             for e in self.turnOffScript:
                 self.call_service(e, "turn_on")
         else:
-            self.log.info("turnOffLightEntities :: Turning Off the Lights! (%s)", self.roomLightEntities)
+            self.log.info("turnOffLightEntities :: Turning Off Room Lights: (%s)", self.roomLightEntities)
             for e in self.roomLightEntities:
                 self.call_service(e, "turn_off")
 
-    # turnOnScene (either a script or a scene)
+    # activateLightSceneOrScript (either a script, a scene or directly light entities)
     def turnOnLightEntities(self):
-        if len(self.turnOnScene) > 0:
-            self.log.info("turnOnLightEntities :: Turning On the Lights!")
-            for e in self.turnOnScene:
+        if self.activateLightSceneOrScript:
+            self.log.info("turnOnLightEntities :: Activating Scene or Script: %s", self.activateLightSceneOrScript)
+            for e in self.activateLightSceneOrScript:
+                self.call_service(e, "turn_on")
+        else:
+            self.log.info("turnOnLightEntities :: Turning On the Room Lights (default): %s", self.roomLightEntities)
+            for e in self.roomLightEntities:
                 self.call_service(e, "turn_on")
 
 
@@ -1050,7 +1070,7 @@ class Model:
         self.log.debug("Turn Off Sensors                %s", str(self.turnOffSensorEntities))
         self.log.debug("Illuminance Sensor              %s", str(self.illuminanceSensorEntity))
         self.log.debug("Illuminance Sensor Threshold    %s", str(self.illuminanceSensorThreshold))
-        self.log.debug("Turn On - Scene or Script:      %s", str(self.turnOnScene))
+        self.log.debug("Turn On - Scene or Script:      %s", str(self.activateLightSceneOrScript))
         self.log.debug("Turn Off - Script:              %s", str(self.turnOffScript))
         self.log.debug("Turn Off - Blocking Entities    %s", str(self.turnOffBlockingEntities))        
         self.log.debug("Turn Off - Delay:               %s", str(self.turnOffDelay))
