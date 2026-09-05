@@ -714,8 +714,17 @@ class Model:
             return True
 
         s = self.hass.states.get(self.illuminanceSensorEntity)
-        self.log.debug("Current light level: {}, Threshold: {} (lux)".format(s.state, self.illuminanceSensorThreshold))
-        isBelow = float(s.state) < float(self.illuminanceSensorThreshold)
+        try:
+            level = float(s.state)
+        except (AttributeError, TypeError, ValueError):
+            # Sensor missing, unavailable/unknown or otherwise non-numeric. Fail toward
+            # lights-on rather than letting the exception abort the motion handler.
+            self.log.warning(
+                "Illuminance sensor %s has no numeric value (%s); treating as below threshold",
+                self.illuminanceSensorEntity, None if s is None else s.state)
+            return True
+        self.log.debug("Current light level: {}, Threshold: {} (lux)".format(level, self.illuminanceSensorThreshold))
+        isBelow = level < float(self.illuminanceSensorThreshold)
         self.log.info("Illuminance threshold reached: {}".format(isBelow))
 
         return isBelow
