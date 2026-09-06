@@ -522,17 +522,25 @@ class Model:
             str(new)
         )
 
+        # self.context is None until the first command this controller issues
+        # (set_context in call_service). Guard every dereference: log arguments
+        # are evaluated regardless of the debug level, so an unguarded
+        # self.context.id raises AttributeError out of the state-change
+        # listener on every state event before the first activation — e.g.
+        # after an HA restart when the light flaps unavailable/off.
         self.log.debug("handle_state_change :: Self-Context: %s.", str(self.context))
-        self.log.debug("handle_state_change :: Self-Context-Id: %s.", self.context.id)
-        self.log.debug("handle_state_change :: Self-Context-User-Id: %s.", self.context.user_id)
-        self.log.debug("handle_state_change :: Self-Context-Parent-Id: %s.", self.context.parent_id)
+        if self.context is not None:
+            self.log.debug("handle_state_change :: Self-Context-Id: %s.", self.context.id)
+            self.log.debug("handle_state_change :: Self-Context-User-Id: %s.", self.context.user_id)
+            self.log.debug("handle_state_change :: Self-Context-Parent-Id: %s.", self.context.parent_id)
 
         self.log.debug("handle_state_change :: New-Context: %s.", str(new.context))
-        self.log.debug("handle_state_change :: New-Context-Id: %s.", new.context.id)
-        self.log.debug("handle_state_change :: New-Context-User-Id: %s.", new.context.user_id)
-        self.log.debug("handle_state_change :: New-Context-Parent-Id: %s.", new.context.parent_id)
+        if new.context is not None:
+            self.log.debug("handle_state_change :: New-Context-Id: %s.", new.context.id)
+            self.log.debug("handle_state_change :: New-Context-User-Id: %s.", new.context.user_id)
+            self.log.debug("handle_state_change :: New-Context-Parent-Id: %s.", new.context.parent_id)
 
-        if self.context.parent_id is None:
+        if self.context is None or self.context.parent_id is None:
             self.log.info("handle_state_change :: Light status change triggered by manual interference.")
         else:
             self.log.info("handle_state_change :: Light status change triggered by RLC integration.")            
