@@ -1,0 +1,6 @@
+{
+  "name": "Room Light Control",
+  "content_in_root": false,
+  "render_readme": true,
+  "domains": ["room_light_control"]
+}

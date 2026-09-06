@@ -18,7 +18,17 @@ Room Light Control is a Home Assistant integration designed to automatically con
 
 ## Installation
 
-To install Room Light Control, simply copy all files from the `room_light_control` directory to your Home Assistant's `/custom_components/room_light_control` directory, using the Raw button to ensure proper formatting. Then, restart Home Assistant.
+### Installation via HACS (recommended)
+
+1. Make sure [HACS](https://hacs.xyz/) is installed in your Home Assistant instance.
+2. In Home Assistant, open **HACS → Integrations**, select the three-dot menu, and choose **Custom repositories**.
+3. Add the URL of this repository (for example, `https://github.com/valem/room-light-control`) and select **Integration** as the category.
+4. After the repository has been added, search for **Room Light Control** inside HACS and install the integration.
+5. Restart Home Assistant to load the newly installed integration.
+
+### Manual installation
+
+To install Room Light Control manually, simply copy all files from the `room_light_control` directory to your Home Assistant's `/custom_components/room_light_control` directory, using the Raw button to ensure proper formatting. Then, restart Home Assistant.
 
 ## Configuration
 
